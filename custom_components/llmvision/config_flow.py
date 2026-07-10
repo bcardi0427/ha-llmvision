@@ -850,9 +850,11 @@ class llmvisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_google(self, user_input=None):
         errors = {}
-        # Make sure self.init_info is initialized
+        # Make sure self.init_info is initialized and mutable
         if not hasattr(self, "init_info") or self.init_info is None:
             self.init_info = {}
+        else:
+            self.init_info = dict(self.init_info)
 
         if self.source == config_entries.SOURCE_RECONFIGURE and not self.init_info:
             self.init_info = dict(self._get_reconfigure_entry().data)
