@@ -31,6 +31,7 @@ from .const import (
     ENDPOINT_AZURE,
     ENDPOINT_ANTHROPIC,
     ENDPOINT_GOOGLE,
+    ENDPOINT_GOOGLE_MODELS,
     ENDPOINT_LOCALAI,
     ENDPOINT_OLLAMA,
     ENDPOINT_OPENWEBUI,
@@ -531,6 +532,29 @@ class Provider(ABC):
                 url,
                 headers=headers,
                 json=data,
+                timeout=ClientTimeout(total=self.request_timeout),
+            )
+        except Exception as e:
+            raise ServiceValidationError(f"Request failed: {e}")
+
+        if response.status != 200:
+            frame = inspect.stack()[1]
+            provider = frame.frame.f_locals["self"].__class__.__name__.lower()
+            parsed_response = await self._resolve_error(response, provider)
+            raise ServiceValidationError(parsed_response)
+        else:
+            response_data = await response.json()
+            _LOGGER.debug(f"Response data: {response_data}")
+            return response_data
+
+    async def _get(self, url: str, headers: dict) -> dict:
+        """Get data from url and return response data"""
+        san_url = re.sub(r"\?key=[^&]*", "", url)
+        try:
+            _LOGGER.debug(f"Getting from {san_url}")
+            response = await self.session.get(
+                url,
+                headers=headers,
                 timeout=ClientTimeout(total=self.request_timeout),
             )
         except Exception as e:
@@ -1160,6 +1184,14 @@ class Google(Provider):
         return True
 
     def _model_supports_thinking(self) -> bool:
+        import re
+        match = re.search(r"gemini-(\d+(?:\.\d+)?)", self.model)
+        if match:
+            try:
+                version = float(match.group(1))
+                return version >= 2.5
+            except ValueError:
+                pass
         return any(m in self.model for m in ["gemini-2.5", "gemini-3"])
 
     def _generate_headers(self) -> dict:
@@ -1178,11 +1210,12 @@ class Google(Provider):
                     "No candidates were returned from Google API"
                 )
             content = candidates[0].get("content")
-            if not content or not content.get("parts") or not content.get("parts")[0]:
+            parts = content.get("parts") if content else None
+            if not parts:
                 raise ServiceValidationError(
                     "No content parts were returned from Google API"
                 )
-            response_text = content.get("parts")[0].get("text")
+            response_text = "".join(part.get("text", "") for part in parts if "text" in part)
         except Exception as e:
             _LOGGER.error(f"Error: {e}")
             raise e
@@ -1294,22 +1327,26 @@ class Google(Provider):
 
         return payload
 
+    async def get_models(self) -> list[str]:
+        headers = self._generate_headers()
+        url = ENDPOINT_GOOGLE_MODELS.format(api_key=self.api_key)
+        response = await self._get(url=url, headers=headers)
+        models = response.get("models", [])
+        return [m.get("name", "").replace("models/", "") for m in models if "name" in m]
+
     async def validate(self) -> None | ServiceValidationError:
         if not self.api_key:
             raise ServiceValidationError("empty_api_key")
-
-        headers = self._generate_headers()
-        data = {
-            "contents": [{"role": "user", "parts": [{"text": "Hi"}]}],
-            "generationConfig": {"maxOutputTokens": 1, "temperature": 0.5},
-        }
-        await self._post(
-            url=self.endpoint.get("base_url").format(
-                model=self.model, api_key=self.api_key
-            ),
-            headers=headers,
-            data=data,
-        )
+        try:
+            model_names = await self.get_models()
+            if self.model:
+                clean_model = self.model.replace("models/", "")
+                if clean_model not in model_names:
+                    raise ServiceValidationError(f"model_not_found: {clean_model}")
+        except Exception as e:
+            if isinstance(e, ServiceValidationError):
+                raise
+            raise ServiceValidationError(f"handshake_failed: {e}")
 
 
 class Groq(Provider):

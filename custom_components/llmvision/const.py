@@ -153,6 +153,7 @@ DEFAULT_SUMMARY_PROMPT = "Provide a brief summary for the following titles. Focu
 ENDPOINT_OPENAI = "https://api.openai.com/v1/chat/completions"
 ENDPOINT_ANTHROPIC = "https://api.anthropic.com/v1/messages"
 ENDPOINT_GOOGLE = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+ENDPOINT_GOOGLE_MODELS = "https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
 ENDPOINT_GROQ = "https://api.groq.com/openai/v1/chat/completions"
 ENDPOINT_LOCALAI = "{protocol}://{ip_address}:{port}/v1/chat/completions"
 ENDPOINT_OLLAMA = "{protocol}://{ip_address}:{port}/api/chat"

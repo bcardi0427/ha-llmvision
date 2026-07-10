@@ -474,7 +474,7 @@ class ServiceCallData:
         self.max_frames: int = int(data_call.data.get(MAX_FRAMES, 3))
         self.target_width: int = data_call.data.get(TARGET_WIDTH, 3840)
         self.temperature: float = float()
-        self.max_tokens: int = int(data_call.data.get(MAXTOKENS, 3000))
+        self.max_tokens: int = int(data_call.data.get(MAXTOKENS, 8192))
         self.include_filename: bool = data_call.data.get(INCLUDE_FILENAME, False)
         self.expose_images: bool = data_call.data.get(EXPOSE_IMAGES, False)
         self.generate_title: bool = data_call.data.get(GENERATE_TITLE, False)

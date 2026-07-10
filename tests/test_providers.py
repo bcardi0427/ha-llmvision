@@ -1736,7 +1736,7 @@ async def test_google_make_request_prepare_text_and_validate_paths(coverage_hass
             make_coverage_call(response_format="json", structure="{")
         )
 
-    provider._post = AsyncMock(return_value={"ok": True})
+    provider._get = AsyncMock(return_value={"models": [{"name": "models/gemini-2.5-pro"}]})
     await provider.validate()
 
     no_key = Google(coverage_hass, "", "gemini-pro")

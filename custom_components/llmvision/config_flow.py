@@ -849,114 +849,176 @@ class llmvisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_google(self, user_input=None):
-        data_schema = vol.Schema(
-            {
-                vol.Optional("connection_section"): section(
-                    vol.Schema(
-                        {
-                            vol.Required(CONF_API_KEY): selector(
-                                {"text": {"type": "password"}}
-                            )
-                        }
-                    ),
-                    {"collapsed": False},
-                ),
-                vol.Optional("model_section"): section(
-                    vol.Schema(
-                        {
-                            vol.Required(
-                                CONF_DEFAULT_MODEL, default=DEFAULT_GOOGLE_MODEL
-                            ): str,
-                            vol.Optional(CONF_TEMPERATURE, default=0.5): selector(
-                                {
-                                    "number": {
-                                        "min": 0,
-                                        "max": 1,
-                                        "step": 0.1,
-                                        "mode": "slider",
-                                    }
-                                }
-                            ),
-                            vol.Optional(CONF_TOP_P, default=0.9): selector(
-                                {
-                                    "number": {
-                                        "min": 0,
-                                        "max": 1,
-                                        "step": 0.1,
-                                        "mode": "slider",
-                                    }
-                                }
-                            ),
-                            vol.Optional(CONF_THINKING_BUDGET, default=0): selector(
-                                {
-                                    "number": {
-                                        "min": 0,
-                                        "max": 10000,
-                                        "step": 100,
-                                        "mode": "slider",
-                                    }
-                                }
-                            ),
-                        }
-                    ),
-                    {"collapsed": False},
-                ),
-            }
-        )
+        errors = {}
+        # Make sure self.init_info is initialized
+        if not hasattr(self, "init_info") or self.init_info is None:
+            self.init_info = {}
 
-        if self.source == config_entries.SOURCE_RECONFIGURE:
-            # load existing configuration and add it to the dialog
-            self.init_info = self._get_reconfigure_entry().data
-            # Re-nest the flat config entry data into sections
-            suggested = {
-                "connection_section": {CONF_API_KEY: self.init_info.get(CONF_API_KEY)},
-                "model_section": {
-                    CONF_DEFAULT_MODEL: self.init_info.get(
-                        CONF_DEFAULT_MODEL, DEFAULT_GOOGLE_MODEL
-                    ),
-                    CONF_TEMPERATURE: self.init_info.get(CONF_TEMPERATURE, 0.5),
-                    CONF_TOP_P: self.init_info.get(CONF_TOP_P, 0.9),
-                    CONF_THINKING_BUDGET: self.init_info.get(CONF_THINKING_BUDGET, 0),
-                },
-            }
-            data_schema = self.add_suggested_values_to_schema(data_schema, suggested)
+        if self.source == config_entries.SOURCE_RECONFIGURE and not self.init_info:
+            self.init_info = dict(self._get_reconfigure_entry().data)
 
-        if user_input is not None:
-            # save provider to user_input
-            user_input[CONF_PROVIDER] = self.init_info[CONF_PROVIDER]
-            # flatten dict to remove nested keys
-            user_input = flatten_dict(user_input)
+        # 1. Prepare dynamic model options if API key is available
+        api_key = self.init_info.get(CONF_API_KEY)
+        models = self.init_info.get("models")
+
+        # If we have an API key but haven't fetched models yet, try fetching them
+        if api_key and not models:
             try:
-                google = Google(
-                    self.hass,
-                    api_key=user_input[CONF_API_KEY],
-                    model=user_input[CONF_DEFAULT_MODEL],
-                )
-                await google.validate()
-                # add the mode to user_input
-                user_input[CONF_PROVIDER] = self.init_info[CONF_PROVIDER]
-                if self.source == config_entries.SOURCE_RECONFIGURE:
-                    # we're reconfiguring an existing config
-                    return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(),
-                        data_updates=user_input,
+                google = Google(self.hass, api_key=api_key, model="")
+                models = await google.get_models()
+                self.init_info["models"] = models
+            except Exception as e:
+                _LOGGER.error(f"Failed to fetch models: {e}")
+                errors["base"] = "empty_api_key"
+
+        # 2. Determine which schema to show
+        if api_key and models:
+            # We have API key and models list -> Show full configuration form with dropdown
+            model_options = [{"label": m, "value": m} for m in models]
+            suggested_model = self.init_info.get(CONF_DEFAULT_MODEL, DEFAULT_GOOGLE_MODEL)
+            if suggested_model not in models:
+                suggested_model = models[0] if models else DEFAULT_GOOGLE_MODEL
+
+            data_schema = vol.Schema(
+                {
+                    vol.Optional("connection_section"): section(
+                        vol.Schema(
+                            {
+                                vol.Required(CONF_API_KEY, default=api_key): selector(
+                                    {"text": {"type": "password"}}
+                                )
+                            }
+                        ),
+                        {"collapsed": False},
+                    ),
+                    vol.Optional("model_section"): section(
+                        vol.Schema(
+                            {
+                                vol.Required(
+                                    CONF_DEFAULT_MODEL, default=suggested_model
+                                ): selector(
+                                    {
+                                        "select": {
+                                            "options": model_options,
+                                            "mode": "dropdown",
+                                            "custom_value": True,
+                                        }
+                                    }
+                                ),
+                                vol.Optional(
+                                    CONF_TEMPERATURE, default=self.init_info.get(CONF_TEMPERATURE, 0.5)
+                                ): selector(
+                                    {
+                                        "number": {
+                                            "min": 0,
+                                            "max": 1,
+                                            "step": 0.1,
+                                            "mode": "slider",
+                                        }
+                                    }
+                                ),
+                                vol.Optional(
+                                    CONF_TOP_P, default=self.init_info.get(CONF_TOP_P, 0.9)
+                                ): selector(
+                                    {
+                                        "number": {
+                                            "min": 0,
+                                            "max": 1,
+                                            "step": 0.1,
+                                            "mode": "slider",
+                                        }
+                                    }
+                                ),
+                                vol.Optional(
+                                    CONF_THINKING_BUDGET, default=self.init_info.get(CONF_THINKING_BUDGET, 0)
+                                ): selector(
+                                    {
+                                        "number": {
+                                            "min": 0,
+                                            "max": 10000,
+                                            "step": 100,
+                                            "mode": "slider",
+                                        }
+                                    }
+                                ),
+                            }
+                        ),
+                        {"collapsed": False},
+                    ),
+                }
+            )
+        else:
+            # We don't have API key or models failed to load -> Show API Key input form
+            data_schema = vol.Schema(
+                {
+                    vol.Optional("connection_section"): section(
+                        vol.Schema(
+                            {
+                                vol.Required(CONF_API_KEY): selector(
+                                    {"text": {"type": "password"}}
+                                )
+                            }
+                        ),
+                        {"collapsed": False},
+                    ),
+                }
+            )
+
+        # 3. Handle submission
+        if user_input is not None:
+            user_input[CONF_PROVIDER] = "Google"
+            flat_input = flatten_dict(user_input)
+
+            # Check if this is the connection-only submission or full submission
+            if CONF_DEFAULT_MODEL not in flat_input:
+                # User only submitted API Key -> Fetch models and reload form
+                try:
+                    google = Google(self.hass, api_key=flat_input[CONF_API_KEY], model="")
+                    models = await google.get_models()
+                    if not models:
+                        raise ServiceValidationError("No models returned")
+                    
+                    self.init_info[CONF_API_KEY] = flat_input[CONF_API_KEY]
+                    self.init_info["models"] = models
+                    # Refresh form with new schema
+                    return await self.async_step_google()
+                except Exception as e:
+                    _LOGGER.error(f"Validation failed: {e}")
+                    errors["base"] = "empty_api_key"
+                    # Render key-input schema again with errors
+            else:
+                # User submitted the full configuration
+                try:
+                    # Final validation
+                    google = Google(
+                        self.hass,
+                        api_key=flat_input[CONF_API_KEY],
+                        model=flat_input[CONF_DEFAULT_MODEL],
                     )
-                else:
-                    # New config entry
-                    return self.async_create_entry(
-                        title="Google Gemini", data=user_input
-                    )
-            except ServiceValidationError as e:
-                _LOGGER.error(f"Validation failed: {e}")
-                return self.async_show_form(
-                    step_id="google",
-                    data_schema=data_schema,
-                    errors={"base": "empty_api_key"},
-                )
+                    await google.validate()
+
+                    # Save provider to configuration
+                    flat_input[CONF_PROVIDER] = "Google"
+                    # Remove dynamic models list from entry data if it got merged
+                    flat_input.pop("models", None)
+
+                    if self.source == config_entries.SOURCE_RECONFIGURE:
+                        return self.async_update_reload_and_abort(
+                            self._get_reconfigure_entry(),
+                            data_updates=flat_input,
+                        )
+                    else:
+                        return self.async_create_entry(
+                            title="Google Gemini", data=flat_input
+                        )
+                except ServiceValidationError as e:
+                    _LOGGER.error(f"Validation failed: {e}")
+                    errors["base"] = "empty_api_key"
 
         return self.async_show_form(
             step_id="google",
             data_schema=data_schema,
+            errors=errors,
         )
 
     async def async_step_groq(self, user_input=None):
