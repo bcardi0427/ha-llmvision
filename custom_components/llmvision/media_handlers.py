@@ -37,6 +37,23 @@ class MediaProcessor:
         self.snapshots_path = f"/media/{DOMAIN}/snapshots/"
         self.key_frame = ""
 
+    def _resolve_image_path(self, path: str) -> str:
+        """Resolve directory path to newest image file synchronously."""
+        if not os.path.exists(path):
+            raise ServiceValidationError(f"File {path} does not exist")
+        if os.path.isdir(path):
+            import glob
+            files = []
+            for ext in ("*.jpg", "*.jpeg", "*.png", "*.JPG", "*.JPEG", "*.PNG"):
+                files.extend(glob.glob(os.path.join(path, ext)))
+            if not files:
+                raise ServiceValidationError(f"No images found in directory {path}")
+            files.sort(key=os.path.getmtime, reverse=True)
+            resolved = files[0]
+            _LOGGER.info("Resolved directory path to newest image: %s", resolved)
+            return resolved
+        return path
+
     async def _encode_image(self, img):
         """Encode image as base64"""
         img_byte_arr = io.BytesIO()
@@ -581,24 +598,9 @@ class MediaProcessor:
                 try:
                     image_path = image_path.strip()
 
-                    if not os.path.exists(image_path):
-                        raise ServiceValidationError(
-                            f"File {image_path} does not exist"
-                        )
-
-                    # If it's a directory, find the newest image in it
-                    if os.path.isdir(image_path):
-                        import glob
-                        files = []
-                        for ext in ("*.jpg", "*.jpeg", "*.png", "*.JPG", "*.JPEG", "*.PNG"):
-                            files.extend(glob.glob(os.path.join(image_path, ext)))
-                        if not files:
-                            raise ServiceValidationError(
-                                f"No images found in directory {image_path}"
-                            )
-                        files.sort(key=os.path.getmtime, reverse=True)
-                        image_path = files[0]
-                        _LOGGER.info("Resolved directory path to newest image: %s", image_path)
+                    image_path = await self.hass.async_add_executor_job(
+                        self._resolve_image_path, image_path
+                    )
 
                     filename = ""
 

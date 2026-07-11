@@ -71,6 +71,9 @@ class TestMediaProcessor:
         hass = Mock()
         hass.loop = Mock()
         hass.loop.run_in_executor = AsyncMock()
+        async def async_run(func, *args):
+            return func(*args)
+        hass.async_add_executor_job = async_run
         hass.states = Mock()
         hass.states.get = Mock()
         hass.config = Mock()
