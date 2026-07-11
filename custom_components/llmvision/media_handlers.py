@@ -719,9 +719,13 @@ class MediaProcessor:
                     stdout=output,
                     stderr=error_output,
                 )
-
             else:
                 # Local file
+                if not os.path.exists(video_path):
+                    raise ServiceValidationError(f"Video file does not exist: {video_path}")
+                if os.path.getsize(video_path) == 0:
+                    raise ServiceValidationError(f"Video file is empty (0 bytes): {video_path}")
+
                 ffmpeg_cmd = [
                     "ffmpeg",
                     "-hide_banner",
