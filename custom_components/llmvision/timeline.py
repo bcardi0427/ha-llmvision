@@ -1003,6 +1003,10 @@ class Timeline:
 
                 base = (file or "").lower()
 
+                # Only clean up image files (do not delete videos or other files)
+                if not any(base.endswith(ext) for ext in (".jpg", ".jpeg", ".png")):
+                    continue
+
                 # Protect if linked to an event or pending
                 if base in linked_frames or base in self._pending_key_frames:
                     continue

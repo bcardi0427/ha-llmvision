@@ -523,6 +523,12 @@ class TestMediaProcessor:
         with patch(
             "custom_components.llmvision.media_handlers.asyncio.create_subprocess_exec",
             AsyncMock(return_value=FakeProcess(b"".join(frame_bytes))),
+        ), patch(
+            "custom_components.llmvision.media_handlers.os.path.exists",
+            return_value=True,
+        ), patch(
+            "custom_components.llmvision.media_handlers.os.path.getsize",
+            return_value=10,
         ):
             await processor.add_video(
                 video_path="/tmp/test_clip.mp4",
@@ -667,6 +673,12 @@ class TestMediaProcessor:
         with patch(
             "custom_components.llmvision.media_handlers.asyncio.create_subprocess_exec",
             AsyncMock(return_value=FakeProcess()),
+        ), patch(
+            "custom_components.llmvision.media_handlers.os.path.exists",
+            return_value=True,
+        ), patch(
+            "custom_components.llmvision.media_handlers.os.path.getsize",
+            return_value=10,
         ), pytest.raises(ServiceValidationError, match="No frames extracted"):
             await processor.add_video(
                 video_path="/tmp/empty.mp4",
@@ -694,6 +706,12 @@ class TestMediaProcessor:
         with patch(
             "custom_components.llmvision.media_handlers.asyncio.create_subprocess_exec",
             AsyncMock(return_value=FakeProcess()),
+        ), patch(
+            "custom_components.llmvision.media_handlers.os.path.exists",
+            return_value=True,
+        ), patch(
+            "custom_components.llmvision.media_handlers.os.path.getsize",
+            return_value=10,
         ), pytest.raises(ServiceValidationError, match="stdout not available"):
             await processor.add_video(
                 video_path="/tmp/no-stdout.mp4",
