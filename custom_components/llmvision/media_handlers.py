@@ -54,6 +54,23 @@ class MediaProcessor:
             return resolved
         return path
 
+    def _resolve_video_path(self, path: str) -> str:
+        """Resolve directory path to newest mp4 video file synchronously."""
+        if not os.path.exists(path):
+            raise ServiceValidationError(f"File {path} does not exist")
+        if os.path.isdir(path):
+            import glob
+            files = []
+            for ext in ("*.mp4", "*.mkv", "*.avi", "*.MP4", "*.MKV", "*.AVI"):
+                files.extend(glob.glob(os.path.join(path, ext)))
+            if not files:
+                raise ServiceValidationError(f"No videos found in directory {path}")
+            files.sort(key=os.path.getmtime, reverse=True)
+            resolved = files[0]
+            _LOGGER.info("Resolved directory path to newest video: %s", resolved)
+            return resolved
+        return path
+
     async def _encode_image(self, img):
         """Encode image as base64"""
         img_byte_arr = io.BytesIO()
@@ -956,6 +973,15 @@ class MediaProcessor:
                 video_paths.append(url)
 
         _LOGGER.debug(f"Processing videos: {video_paths}")
+
+        resolved_video_paths = []
+        if video_paths:
+            for path in video_paths:
+                resolved = await self.hass.async_add_executor_job(
+                    self._resolve_video_path, path
+                )
+                resolved_video_paths.append(resolved)
+        video_paths = resolved_video_paths
 
         def process_video(video_path):
             return self.add_video(

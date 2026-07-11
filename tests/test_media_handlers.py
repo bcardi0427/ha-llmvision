@@ -708,6 +708,7 @@ class TestMediaProcessor:
     async def test_add_videos_processes_event_ids(self, processor):
         """add_videos should convert event ids into Frigate clip URLs."""
         processor.add_video = AsyncMock()
+        processor._resolve_video_path = Mock(side_effect=lambda x: x)
 
         with patch(
             "custom_components.llmvision.media_handlers.get_url",
