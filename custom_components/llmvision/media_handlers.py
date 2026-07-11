@@ -586,10 +586,24 @@ class MediaProcessor:
                             f"File {image_path} does not exist"
                         )
 
+                    # If it's a directory, find the newest image in it
+                    if os.path.isdir(image_path):
+                        import glob
+                        files = []
+                        for ext in ("*.jpg", "*.jpeg", "*.png", "*.JPG", "*.JPEG", "*.PNG"):
+                            files.extend(glob.glob(os.path.join(image_path, ext)))
+                        if not files:
+                            raise ServiceValidationError(
+                                f"No images found in directory {image_path}"
+                            )
+                        files.sort(key=os.path.getmtime, reverse=True)
+                        image_path = files[0]
+                        _LOGGER.info("Resolved directory path to newest image: %s", image_path)
+
                     filename = ""
 
                     if include_filename:
-                        filename = image_path.split("/")[-1].split(".")[-2]
+                        filename = image_path.replace("\\", "/").split("/")[-1].split(".")[-2]
 
                     image_data = await self.resize_image(
                         target_width=target_width, image_path=image_path
