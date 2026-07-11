@@ -156,30 +156,38 @@ class Memory:
         """Encode images as base64"""
         encoded_images = []
 
+        import os
         for image_path in image_paths:
-            img = await self.hass.loop.run_in_executor(None, Image.open, image_path)
-            with img:
-                await self.hass.loop.run_in_executor(None, img.load)
-                # calculate new height and width based on aspect ratio
-                width, height = img.size
-                aspect_ratio = width / height
-                if aspect_ratio > 1:
-                    new_width = 512
-                    new_height = int(512 / aspect_ratio)
-                else:
-                    new_height = 512
-                    new_width = int(512 * aspect_ratio)
-                img = img.resize((new_width, new_height))
+            if not os.path.isfile(image_path):
+                _LOGGER.warning("Memory path is not a file: %s", image_path)
+                continue
+            try:
+                img = await self.hass.loop.run_in_executor(None, Image.open, image_path)
+                with img:
+                    await self.hass.loop.run_in_executor(None, img.load)
+                    # calculate new height and width based on aspect ratio
+                    width, height = img.size
+                    aspect_ratio = width / height
+                    if aspect_ratio > 1:
+                        new_width = 512
+                        new_height = int(512 / aspect_ratio)
+                    else:
+                        new_height = 512
+                        new_width = int(512 * aspect_ratio)
+                    img = img.resize((new_width, new_height))
 
-                # Convert Memory Images to RGB mode if needed
-                if img.mode == "RGBA":
-                    img = img.convert("RGB")
+                    # Convert Memory Images to RGB mode if needed
+                    if img.mode == "RGBA":
+                        img = img.convert("RGB")
 
-                # Encode the image to base64
-                img_byte_arr = io.BytesIO()
-                img.save(img_byte_arr, format="JPEG")
-                base64_image = base64.b64encode(img_byte_arr.getvalue()).decode("utf-8")
-                encoded_images.append(base64_image)
+                    # Encode the image to base64
+                    img_byte_arr = io.BytesIO()
+                    img.save(img_byte_arr, format="JPEG")
+                    base64_image = base64.b64encode(img_byte_arr.getvalue()).decode("utf-8")
+                    encoded_images.append(base64_image)
+            except Exception as e:
+                _LOGGER.error("Failed to load memory image %s: %s", image_path, e)
+                continue
 
         return encoded_images
 

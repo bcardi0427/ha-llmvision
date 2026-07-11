@@ -1550,7 +1550,7 @@ class llmvisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 errors = {"base": "mismatched_lengths"}
             for path in user_input.get(CONF_MEMORY_PATHS, []):
-                if not os.path.exists(path):
+                if not os.path.isfile(path):
                     errors = {"base": "invalid_image_path"}
 
             if errors:
