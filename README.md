@@ -1,13 +1,13 @@
 <p align="center">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./logos/dark_logo@2x.png">
-  <img alt="LLM Vision Logo" src="./logos/logo@2x.png" width="512">
+  <img alt="HA LLMVision Logo" src="./logos/logo@2x.png" width="512">
 </picture>
 </p>
 <p align=center>
 <img src=https://img.shields.io/badge/HACS-Default-orange.svg>
 <img src="https://img.shields.io/maintenance/yes/2026.svg">
-<img src=https://img.shields.io/badge/version-1.7.0-blue>
+<img src=https://img.shields.io/badge/version-1.7.7-blue>
 <img alt="Issues" src="https://img.shields.io/github/issues/valentinfrlch/ha-llmvision?color=0088ff">
 <img alt="Static Badge" src="https://img.shields.io/badge/support-buymeacoffee?logo=buymeacoffee&logoColor=black&color=%23FFDD00&link=https%3A%2F%2Fbuymeacoffee.com%2Fllmvision">
     <h2 align=center style="font-weight:bold">
@@ -32,7 +32,7 @@
 <br>
 <br>
 <p align="center">
-    <strong>LLM Vision</strong> is a Home Assistant integration that uses multimodal large language models to analyze images, videos, live camera feeds, and Frigate events. It can also keep track of analyzed events in a timeline, with an optional Timeline Card for your dashboard.
+    <strong>HA LLMVision</strong> is a Home Assistant integration that uses multimodal large language models to analyze images, videos, live camera feeds, and Frigate events. It can also keep track of analyzed events in a timeline, with an optional Timeline Card for your dashboard.
 </p>
 
 ## Features
@@ -54,21 +54,21 @@ See the [website](https://llmvision.org) for the latest features and examples.
 
 ## Quick Start Guide
 >[!TIP]
->LLM Vision is available in the default HACS repository. You can install it directly through HACS or click the button below to open it there.
+>HA LLMVision is available in the default HACS repository. You can install it directly through HACS or click the button below to open it there.
 
 [![Open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=valentinfrlch&repository=ha-llmvision&category=Integration)
-1. **Install `LLM Vision`** from HACS
+1. **Install `HA LLMVision`** from HACS
 2. **Restart** Home Assistant
-3. **Search for `LLM Vision`** in Home Assistant Settings/Devices & services
+3. **Search for `HA LLMVision`** in Home Assistant Settings/Devices & services
 4. **Press submit** to continue setup with default settings
-5. **Set up the media folder** LLM Vision uses the more secure `/media` folder for storing snapshots. If you're running Home Assistant Container, you may need to mount a folder to `/media` in your container settings. See the docs for more details.
-6. **Return to the LLM Vision Integration Page** 
+5. **Set up the media folder** HA LLMVision uses the more secure `/media` folder for storing snapshots. If you're running Home Assistant Container, you may need to mount a folder to `/media` in your container settings. See the docs for more details.
+6. **Return to the HA LLMVision Integration Page** 
 7. **Press 'Add Entry'** to add your first AI Provider
 
-Detailed setup instructions and documentation is available here: [LLM Vision Documentation](https://llm-vision.gitbook.io/getting-started/setup/providers)
+Detailed setup instructions and documentation is available here: [HA LLMVision Documentation](https://llm-vision.gitbook.io/getting-started/setup/providers)
 
 ## Blueprint
-With the easy to use blueprint, you'll get camera event notifications intelligently summarized by AI. LLM Vision can also store events in a timeline, so you can see what happened on your dashboard.
+With the easy to use blueprint, you'll get camera event notifications intelligently summarized by AI. HA LLMVision can also store events in a timeline, so you can see what happened on your dashboard.
 <br>
 <p float="left">
     <img src="https://github.com/user-attachments/assets/621dacc0-7f9b-4c7a-b490-94286dd19e86" width="400" />
@@ -78,7 +78,7 @@ With the easy to use blueprint, you'll get camera event notifications intelligen
 [Learn how to install the blueprint](https://llm-vision.gitbook.io/getting-started/setup/blueprint)
 
 ## Resources
-Check the docs for detailed instructions on how to set up LLM Vision and each of the supported providers, get inspiration from examples or join the discussion on the Home Assistant Community and Discord.
+Check the docs for detailed instructions on how to set up HA LLMVision and each of the supported providers, get inspiration from examples or join the discussion on the Home Assistant Community and Discord.
 
 <a href="https://llmvision.org"><img alt="Static Badge" src="https://img.shields.io/badge/website-teal?style=for-the-badge&&logoColor=white&link=https%3A%2F%2Fvalentinfrlch.github.io%2Fllmvision%2F"></a>
 <a href="https://llm-vision.gitbook.io/getting-started"><img src="https://img.shields.io/badge/Documentation-blue?style=for-the-badge&logo=gitbook&logoColor=white&color=18bcf2"/> </a><a href="https://llmvision.org/gallery/"><img src="https://img.shields.io/badge/Examples-blue?style=for-the-badge&logo=gitbook&logoColor=black&color=39ffc2"/></a> </a>
