@@ -16,7 +16,7 @@
 </p>
 
   <p align="center">
-    <a href="#features">🌟 Features </a>
+    <a href="#features">🌟 HA Vision Features </a>
     ·
     <a href="#quick-start-guide">⬇️ Quick Start Guide</a>
     ·
