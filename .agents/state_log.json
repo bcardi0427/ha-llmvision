@@ -1,0 +1,14 @@
+{
+  "current_objective": "Eliminate Verizon SMS bounce emails and fix mobile app push notification schema",
+  "why": "Verizon vtext.com gateway throttles and bounces messages with 452 AUP#MXRT",
+  "active_problems": [],
+  "completed_milestones": [
+    "Updated action from notify.sm_s146vl to notify.send_message with target notify.sm_s146vl and reloaded Core successfully",
+    "Configured Gmail SMTP relay in configuration.yaml and secrets.yaml, validated delivery to 3526482300@vtext.com and @vzwpix.com, and wired notify.verizon_sms into camera automation",
+    "Configured www snapshot storage under /local/llmvision/snapshots/, added markdown image embedding to persistent_notification.create, and confirmed core reload",
+    "Updated action: notify.send_message targeting notify.verizon_sms_3526482300_vtext_com, cleaned up configuration.yaml YAML deprecations, and confirmed HA Core is online",
+    "Removed notify.verizon_sms_3526482300_vtext_com from Car Camera automation in automations.yaml to stop bounce flooding. Corrected notify.send_message schema for notify.sm_s146vl to only pass title and message (removing invalid image parameter). Fixed degree symbol encoding in configuration.yaml."
+  ],
+  "next_step": "Verify mobile push delivery on person/pet motion without errors",
+  "last_updated": "2026-10-01 23:14:11"
+}
